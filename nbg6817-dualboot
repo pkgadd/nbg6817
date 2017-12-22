@@ -1,0 +1,138 @@
+#!/bin/sh
+
+# Copyright: (C) 2017, Stefan Lippers-Hollmann <s.l-h@gmx.de>
+#
+# License: ISC
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+set -e
+
+# ugly workaround, the OEM firmware doesn't define this function
+# let this be redefined by /lib/functions.sh on LEDE
+board_name() {
+	[ -e /tmp/sysinfo/board_name ] && cat /tmp/sysinfo/board_name || echo "generic"
+}
+
+usage() {
+	cat <<EOF
+Usage: $0 [-h|--help|--get-mtd|--get-rootfs|--set-rootfs [/dev/mmcblk0p5|/dev/mmcblk0p8]]
+EOF
+}
+
+get_mtd() {
+	local DUAL_FLAG_MTD
+
+	# LEDE uses "0:DUAL_FLAG" (/dev/mtdblock11)
+	DUAL_FLAG_MTD="$(find_mtd_part 0:DUAL_FLAG)"
+	if [ -z "${DUAL_FLAG_MTD}" ]; then
+		# the ZyXEL OEM firmware uses "dualflag" (/dev/mtdblock6)
+		DUAL_FLAG_MTD="$(find_mtd_part dualflag)"
+	fi
+
+	# check that the detected mtd is really a block device
+	if [ -b "${DUAL_FLAG_MTD}" ]; then
+		echo $DUAL_FLAG_MTD
+	else
+		echo "ERROR: failing to find DUAL_FLAG mtd" >&2
+		exit 1
+	fi
+}
+
+get_rootfs() {
+	local BOOT_FLAG
+
+	BOOT_FLAG=$(dd if=$(get_mtd) bs=1 count=1 2>/dev/null | hexdump -n 1 -e '1/1 "%02x\n"')
+	if [ "${BOOT_FLAG}" = "ff" ]; then
+		# using header (mmcblk0p3)/ kernel (mmcblk0p4)/ rootfs (mmcblk0p5)
+		echo "/dev/mmcblk0p5"
+	elif [ "${BOOT_FLAG}" = "01" ]; then
+		# using header_1 (mmcblk0p6)/ kernel_1 (mmcblk0p7)/ rootfs_1 (mmcblk0p8)
+		echo "/dev/mmcblk0p8"
+	else
+		echo "ERROR: can't parse bootflag"
+		exit 1
+	fi
+}
+
+set_rootfs() {
+	local ROOTFS
+	ROOTFS="$1"
+
+	if [ -z "${ROOTFS}" ] || [ ! -b "${ROOTFS}" ]; then
+		echo "ERROR: provided rootfs (${ROOTFS}) not a block device" >&2
+		exit 1
+	fi
+
+	case "$1" in
+		/dev/mmcblk0p5)
+			printf "\xff" >$(get_mtd)
+			;;
+		/dev/mmcblk0p8)
+			printf "\x01" >$(get_mtd)
+			;;
+		*)
+			echo "ERROR: invalid rootfs (${ROOTFS})" >&2
+			exit 1
+			;;
+	esac
+}
+
+# provide find_mtd_part(), available in both LEDE and the ZyXEL OEM firmware
+if [ -r /lib/functions.sh ]; then
+	. /lib/functions.sh
+else
+	echo "ERROR: this tool can only be used on OpenWrt or the ZyXEL NBG6817 OEM firmware." >&2
+	exit 1
+fi
+
+# bail out screaming, if this gets not executed on a ZyXEL NBG6817
+if [ ! "$(board_name)" = "nbg6817" ]; then
+	echo "ERROR: this tool is only safe to be used on the ZyXEL NBG6817" >&2
+	exit 1
+fi
+
+# at least one parameter is required
+if [ -z "${1}" ]; then
+	usage
+	exit 1
+fi
+
+case "$1" in
+	-h|--help)
+		usage
+		exit 0
+		;;
+	--get-mtd)
+		echo $(get_mtd)
+		exit 0
+		;;
+	--get-rootfs)
+		echo $(get_rootfs)
+		exit 0
+		;;
+	--set-rootfs)
+		if [ -n "$2" ]; then
+			set_rootfs "$2"
+		else
+			echo "ERROR: rootfs not provided" >&2
+			usage
+			exit 1
+		fi
+		exit 0
+		;;
+	*)
+		usage
+		exit 1
+		;;
+esac
+
