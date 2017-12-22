@@ -17,8 +17,9 @@
 
 set -e
 
-# ugly workaround, the OEM firmware doesn't define this function
-# let this be redefined by /lib/functions.sh on LEDE
+# ugly workaround, the OEM firmware doesn't define this function, while still
+# providing and populating /tmp/sysinfo/board_name correctly, let this be
+# redefined by /lib/functions.sh on LEDE
 board_name() {
 	[ -e /tmp/sysinfo/board_name ] && cat /tmp/sysinfo/board_name || echo "generic"
 }
