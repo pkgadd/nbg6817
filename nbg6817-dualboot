@@ -17,13 +17,6 @@
 
 set -e
 
-# ugly workaround, the OEM firmware doesn't define this function, while still
-# providing and populating /tmp/sysinfo/board_name correctly, let this be
-# redefined by /lib/functions.sh on LEDE
-board_name() {
-	[ -e /tmp/sysinfo/board_name ] && cat /tmp/sysinfo/board_name || echo "generic"
-}
-
 usage() {
 	cat <<EOF
 Usage: $0 [-h|--help|--get-mtd|--get-rootfs|--set-rootfs [/dev/mmcblk0p5|/dev/mmcblk0p8]]
@@ -86,6 +79,13 @@ set_rootfs() {
 			exit 1
 			;;
 	esac
+}
+
+# ugly workaround, the OEM firmware doesn't define this function, while still
+# providing and populating /tmp/sysinfo/board_name correctly, let this be
+# redefined by /lib/functions.sh on LEDE
+board_name() {
+	[ -e /tmp/sysinfo/board_name ] && cat /tmp/sysinfo/board_name || echo "generic"
 }
 
 # provide find_mtd_part(), available in both LEDE and the ZyXEL OEM firmware
