@@ -28,6 +28,8 @@ Parameters:
                         /dev/mtdblock6 (ZyXEL OEM) or /dev/mtdblock11 (LEDE)
 --get-rootfs            get the currently configured rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
+--get-version <blkdev>  try to decode the version of the firmware installed in
+                        the named rootfs (/dev/mmcblk0p5 or /dev/mmcblk0p8)
 --set-rootfs <blkdev>   set the desired rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 
@@ -67,6 +69,54 @@ get_rootfs() {
 		echo "ERROR: can't parse bootflag"
 		exit 2
 	fi
+}
+
+get_version() {
+	local HEADER
+	local KERNEL
+	local ROOTFS
+	ROOTFS="$1"
+
+	case "$ROOTFS" in
+		/dev/mmcblk0p5)
+			HEADER=/dev/mmcblk0p3
+			KERNEL=/dev/mmcblk0p4
+			;;
+		/dev/mmcblk0p8)
+			HEADER=/dev/mmcblk0p6
+			KERNEL=/dev/mmcblk0p7
+			;;
+		*)
+			echo "ERROR: invalid rootfs supplied." >&2
+			exit 13
+			;;
+	esac
+
+	FIRMWARE_VERSION="$(dd if=${HEADER} bs=1 skip=8 count=16 2>/dev/null)"
+	KERNEL_VERSION="$(dd if=${KERNEL} bs=1 skip=32 count=25 2>/dev/null)"
+
+	case "$KERNEL_VERSION" in
+		ARM*Linux-*)
+			# LEDE/ OpenWrt
+			FIRMWARE_VERSION="LEDE/ Openwrt <unknown revision>"
+			;;
+		Linux-*)
+			# ZyXEL OEM firmware
+			:
+			;;
+		*)
+			echo "ERROR: version of the installed firmware can't be decoded." >&2
+			exit 12
+			;;
+	esac
+
+	echo "HEADER partition is located at \"${HEADER}\""
+	echo "KERNEL partition is located at \"${KERNEL}\""
+	echo "ROOTFS partition is located at \"${ROOTFS}\""
+	echo " "
+	echo "FIRMWARE_VERSION=\"${FIRMWARE_VERSION}\""
+	echo "KERNEL_VERSION=\"${KERNEL_VERSION}\""
+	echo "UNAME_VERSION=\"${KERNEL_VERSION##*Linux-}\""
 }
 
 set_rootfs() {
@@ -155,6 +205,16 @@ case "$1" in
 		;;
 	--get-rootfs)
 		echo $(get_rootfs)
+		exit 0
+		;;
+	--get-version)
+		if [ -n "$2" ]; then
+			get_version "$2"
+		else
+			echo "ERROR: rootfs not provided" >&2
+			usage
+			exit 11
+		fi
 		exit 0
 		;;
 	--set-rootfs)
