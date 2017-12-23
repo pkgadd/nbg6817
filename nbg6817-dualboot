@@ -78,7 +78,7 @@ set_rootfs() {
 		exit 3
 	fi
 
-	case "$1" in
+	case "$ROOTFS" in
 		/dev/mmcblk0p5)
 			printf "\xff" >$(get_mtd)
 			;;
