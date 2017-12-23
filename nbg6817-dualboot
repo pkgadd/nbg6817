@@ -19,7 +19,18 @@ set -e
 
 usage() {
 	cat <<EOF
-Usage: $0 [-h|--help|--get-mtd|--get-rootfs|--set-rootfs [/dev/mmcblk0p5|/dev/mmcblk0p8]]
+$(basename $0): parse and set the dual boot configuration on the ZyXEL NBG6817
+
+Parameters:
+-h|--help               this usage information
+--check-mtd-integrity   check the integrity of the dualflag mtd
+--get-mtd               get the dualflag mtd
+                        /dev/mtdblock6 (ZyXEL OEM) or /dev/mtdblock11 (LEDE)
+--get-rootfs            get the currently configured rootfs
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
+--set-rootfs <blkdev>   set the desired rootfs
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
+
 EOF
 }
 
@@ -81,6 +92,26 @@ set_rootfs() {
 	esac
 }
 
+check_mtd_integrity() {
+	local MTD_CHECKSUM
+	MTD_CHECKSUM="$(md5sum $(get_mtd) | awk '{print $1}')"
+
+	case $MTD_CHECKSUM in
+		ecb99e6ffea7be1e5419350f725da86b)
+			echo "valid dualflag signature found (0xFF, /dev/mmcblk0p5)."
+			;;
+		e107d3d780e73f0b5c7d48ec749e66f9)
+			echo "valid dualflag signature found (0x01, /dev/mmcblk0p8)."
+			;;
+		*)
+			echo "ERROR: unrecognized dualflag signature."
+			exit 1
+			;;
+	esac
+
+	exit 0
+}
+
 # ugly workaround, the OEM firmware doesn't define this function, while still
 # providing and populating /tmp/sysinfo/board_name correctly, let this be
 # redefined by /lib/functions.sh on LEDE
@@ -111,6 +142,10 @@ fi
 case "$1" in
 	-h|--help)
 		usage
+		exit 0
+		;;
+	--check-mtd-integrity)
+		check_mtd_integrity
 		exit 0
 		;;
 	--get-mtd)
