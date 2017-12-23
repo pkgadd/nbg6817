@@ -94,6 +94,9 @@ set_rootfs() {
 
 check_mtd_integrity() {
 	local MTD_CHECKSUM
+
+	# use md5 as checksum algorithm, sha256 is not supported by the
+	# ZyXEL OEM firmware.
 	MTD_CHECKSUM="$(md5sum $(get_mtd) | awk '{print $1}')"
 
 	case $MTD_CHECKSUM in
