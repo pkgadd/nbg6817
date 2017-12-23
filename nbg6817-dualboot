@@ -57,10 +57,10 @@ get_rootfs() {
 	local BOOT_FLAG
 
 	BOOT_FLAG=$(dd if=$(get_mtd) bs=1 count=1 2>/dev/null | hexdump -n 1 -e '1/1 "%02x\n"')
-	if [ "${BOOT_FLAG}" = "ff" ]; then
+	if [ "x${BOOT_FLAG}" = "xff" ]; then
 		# using header (mmcblk0p3)/ kernel (mmcblk0p4)/ rootfs (mmcblk0p5)
 		echo "/dev/mmcblk0p5"
-	elif [ "${BOOT_FLAG}" = "01" ]; then
+	elif [ "x${BOOT_FLAG}" = "x01" ]; then
 		# using header_1 (mmcblk0p6)/ kernel_1 (mmcblk0p7)/ rootfs_1 (mmcblk0p8)
 		echo "/dev/mmcblk0p8"
 	else
@@ -129,7 +129,7 @@ else
 fi
 
 # bail out screaming, if this gets not executed on a ZyXEL NBG6817
-if [ ! "$(board_name)" = "nbg6817" ]; then
+if [ ! "x$(board_name)" = "xnbg6817" ]; then
 	echo "ERROR: this tool is only safe to be used on the ZyXEL NBG6817" >&2
 	exit 7
 fi
