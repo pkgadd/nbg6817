@@ -110,13 +110,15 @@ get_version() {
 			;;
 	esac
 
-	echo "HEADER partition is located at \"${HEADER}\""
-	echo "KERNEL partition is located at \"${KERNEL}\""
-	echo "ROOTFS partition is located at \"${ROOTFS}\""
-	echo " "
-	echo "FIRMWARE_VERSION=\"${FIRMWARE_VERSION}\""
-	echo "KERNEL_VERSION=\"${KERNEL_VERSION}\""
-	echo "UNAME_VERSION=\"${KERNEL_VERSION##*Linux-}\""
+	cat <<EOF
+HEADER partition is located at "${HEADER}"
+KERNEL partition is located at "${KERNEL}"
+ROOTFS partition is located at "${ROOTFS}"
+
+FIRMWARE_VERSION="${FIRMWARE_VERSION}"
+KERNEL_VERSION="${KERNEL_VERSION}"
+UNAME_VERSION="${KERNEL_VERSION##*Linux-}"
+EOF
 }
 
 set_rootfs() {
