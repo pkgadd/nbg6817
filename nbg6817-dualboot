@@ -111,8 +111,6 @@ check_mtd_integrity() {
 			exit 1
 			;;
 	esac
-
-	exit 0
 }
 
 # ugly workaround, the OEM firmware doesn't define this function, while still
@@ -148,7 +146,7 @@ case "$1" in
 		exit 0
 		;;
 	--check-mtd-integrity)
-		check_mtd_integrity
+		echo $(check_mtd_integrity)
 		exit 0
 		;;
 	--get-mtd)
