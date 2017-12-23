@@ -75,16 +75,19 @@ get_version() {
 	local HEADER
 	local KERNEL
 	local ROOTFS
+	local ALTBOOT
 	ROOTFS="$1"
 
 	case "$ROOTFS" in
 		/dev/mmcblk0p5)
 			HEADER=/dev/mmcblk0p3
 			KERNEL=/dev/mmcblk0p4
+			ALTBOOT=""
 			;;
 		/dev/mmcblk0p8)
 			HEADER=/dev/mmcblk0p6
 			KERNEL=/dev/mmcblk0p7
+			ALTBOOT="_1"
 			;;
 		*)
 			echo "ERROR: invalid rootfs supplied." >&2
@@ -111,9 +114,9 @@ get_version() {
 	esac
 
 	cat <<EOF
-HEADER partition is located at "${HEADER}"
-KERNEL partition is located at "${KERNEL}"
-ROOTFS partition is located at "${ROOTFS}"
+"header${ALTBOOT}" partition is located at "${HEADER}"
+"kernel${ALTBOOT}" partition is located at "${KERNEL}"
+"rootfs${ALTBOOT}" partition is located at "${ROOTFS}"
 
 FIRMWARE_VERSION="${FIRMWARE_VERSION}"
 KERNEL_VERSION="${KERNEL_VERSION}"
