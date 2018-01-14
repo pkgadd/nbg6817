@@ -184,10 +184,15 @@ else
 fi
 
 # bail out screaming, if this gets not executed on a ZyXEL NBG6817
-if [ ! "x$(board_name)" = "xnbg6817" ]; then
-	echo "ERROR: this tool is only safe to be used on the ZyXEL NBG6817" >&2
-	exit 7
-fi
+case "$(board_name)" in
+	zyxel,nbg6817|nbg6817)
+		:
+		;;
+	*)
+		echo "ERROR: this tool is only safe to be used on the ZyXEL NBG6817" >&2
+		exit 7
+		;;
+esac
 
 # at least one parameter is required
 if [ -z "${1}" ]; then
