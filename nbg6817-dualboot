@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright: (C) 2017, Stefan Lippers-Hollmann <s.l-h@gmx.de>
+# Copyright: (C) 2017-2018, Stefan Lippers-Hollmann <s.l-h@gmx.de>
 
 # License: ISC
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -30,6 +30,7 @@ Parameters:
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-version <blkdev>  try to decode the version of the firmware installed in
                         the named rootfs (/dev/mmcblk0p5 or /dev/mmcblk0p8)
+-l|--list               list installed firmwares
 --set-rootfs <blkdev>   set the desired rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 
@@ -225,6 +226,13 @@ case "$1" in
 			usage
 			exit 11
 		fi
+		exit 0
+		;;
+	-l|--list)
+		"${0}" --get-version /dev/mmcblk0p5
+		echo ""
+		echo ""
+		"${0}" --get-version /dev/mmcblk0p8
 		exit 0
 		;;
 	--set-rootfs)
