@@ -102,7 +102,7 @@ get_version() {
 	case "$KERNEL_VERSION" in
 		ARM*Linux-*)
 			# LEDE/ OpenWrt
-			FIRMWARE_VERSION="LEDE/ Openwrt <unknown revision>"
+			FIRMWARE_VERSION="LEDE/ OpenWrt <unknown revision>"
 			;;
 		Linux-*)
 			# ZyXEL OEM firmware
