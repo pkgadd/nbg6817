@@ -33,6 +33,9 @@ Parameters:
 -l|--list               list installed firmwares
 --set-rootfs <blkdev>   set the desired rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
+--reset-rootfs <blkdev> DANGEROUS: rewrite the dualflag mtd completely and set
+                        the desired rootfs
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
 
 EOF
 }
@@ -156,6 +159,33 @@ set_rootfs() {
 	esac
 }
 
+reset_rootfs() {
+	local ROOTFS
+	ROOTFS="$1"
+
+	if [ -z "${ROOTFS}" ] || [ ! -b "${ROOTFS}" ]; then
+		echo "ERROR: provided rootfs (${ROOTFS}) not a block device" >&2
+		exit 3
+	fi
+
+	case "$ROOTFS" in
+		/dev/mmcblk0p5)
+			for i in $(seq 0 65535); do
+				printf "\xff"
+			done >$(get_mtd)
+			;;
+		/dev/mmcblk0p8)
+			for i in $(seq 0 65535); do
+				[ "${i}" -eq 0 ] && printf "\x01" || printf "\xff"
+			done >$(get_mtd)
+			;;
+		*)
+			echo "ERROR: invalid rootfs (${ROOTFS})" >&2
+			exit 4
+			;;
+	esac
+}
+
 check_mtd_integrity() {
 	local MTD_CHECKSUM
 
@@ -246,6 +276,16 @@ case "$1" in
 	--set-rootfs)
 		if [ -n "$2" ]; then
 			set_rootfs "$2"
+		else
+			echo "ERROR: rootfs not provided" >&2
+			usage
+			exit 9
+		fi
+		exit 0
+		;;
+	--reset-rootfs)
+		if [ -n "$2" ]; then
+			reset_rootfs "$2"
 		else
 			echo "ERROR: rootfs not provided" >&2
 			usage
