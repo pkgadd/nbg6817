@@ -77,6 +77,7 @@ get_version() {
 	local KERNEL
 	local ROOTFS
 	local ALTBOOT
+	local BOOTFLAG
 	ROOTFS="$1"
 
 	case "$ROOTFS" in
@@ -114,6 +115,12 @@ get_version() {
 			;;
 	esac
 
+	if [ "$(get_rootfs)" = "${ROOTFS}" ]; then
+		BOOTFLAG="yes"
+	else
+		BOOTFLAG="no"
+	fi
+
 	cat <<EOF
 "header${ALTBOOT}" partition is located at "${HEADER}"
 "kernel${ALTBOOT}" partition is located at "${KERNEL}"
@@ -122,6 +129,7 @@ get_version() {
 FIRMWARE_VERSION="${FIRMWARE_VERSION}"
 KERNEL_VERSION="${KERNEL_VERSION}"
 UNAME_VERSION="${KERNEL_VERSION##*Linux-}"
+BOOTFLAG="${BOOTFLAG}"
 EOF
 }
 
