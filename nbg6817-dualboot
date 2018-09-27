@@ -28,6 +28,8 @@ Parameters:
                         /dev/mtdblock6 (ZyXEL OEM) or /dev/mtdblock11 (OpenWrt)
 --get-bootloader-rootfs get the rootfs chosen by the bootloader from sysfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
+--get-cmdline-rootfs    get the rootfs configured by /proc/cmdline
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-rootfs            get the currently configured rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-version <blkdev>  try to decode the version of the firmware installed in
@@ -61,9 +63,9 @@ get_mtd() {
 	fi
 }
 
-get_bootloader_rootfs() {
-	if [ -r /sys/firmware/devicetree/base/chosen/bootloader-args ]; then
-		for param in $(cat /sys/firmware/devicetree/base/chosen/bootloader-args); do
+get_virtual_rootfs() {
+	if [ -r "$1" ]; then
+		for param in $(cat ${1}); do
 			case "${param}" in
 				root=*)
 					echo "${param#root=}"
@@ -71,7 +73,7 @@ get_bootloader_rootfs() {
 			esac
 		done
 	else
-		echo "ERROR: failing to read /sys/firmware/devicetree/base/chosen/bootloader-args." >&2
+		echo "ERROR: failing to read ${1}." >&2
 		exit 14
 	fi
 }
@@ -270,7 +272,11 @@ case "$1" in
 		exit 0
 		;;
 	--get-bootloader-rootfs)
-		echo $(get_bootloader_rootfs)
+		echo $(get_virtual_rootfs /sys/firmware/devicetree/base/chosen/bootloader-args)
+		exit 0
+		;;
+	--get-cmdline-rootfs)
+		echo $(get_virtual_rootfs /proc/cmdline)
 		exit 0
 		;;
 	--get-rootfs)
