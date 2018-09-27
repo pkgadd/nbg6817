@@ -23,11 +23,18 @@ $(basename $0): parse and set the dual boot configuration on the ZyXEL NBG6817
 
 Parameters:
 -h|--help               this usage information
+-hh|--full-help         also display advanced usage informations
 -l|--list               list installed firmwares
 --toggle-rootfs         toggle the stored bootflag to boot from the alternative
                         partition set.
                         please reboot immediately after using this parameter!
 
+EOF
+}
+
+advanced_usage() {
+	usage
+	cat <<EOF
 Advanced parameters:
 --get-rootfs            get the currently configured rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
@@ -352,6 +359,10 @@ fi
 case "$1" in
 	-h|--help)
 		usage
+		exit 0
+		;;
+	-hh|--full-help)
+		advanced_usage
 		exit 0
 		;;
 	--check-mtd-integrity)
