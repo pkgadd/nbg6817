@@ -26,7 +26,7 @@ Parameters:
 -l|--list               list installed firmwares
 --toggle-rootfs         toggle the stored bootflag to boot from the alternative
                         partition set.
-                        Please reboot immediately after using this parameter!
+                        please reboot immediately after using this parameter!
 --fake-rootfs           change /proc/cmdline to display the alternative rootfs
                         instead of the currently booted one, this will instruct
                         sysupgrade to flash the currently booted partition set,
