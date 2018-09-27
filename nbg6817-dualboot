@@ -295,6 +295,10 @@ if [ -r /lib/functions.sh ]; then
 	. /lib/functions.sh
 else
 	echo "ERROR: this tool can only be used on OpenWrt or the ZyXEL NBG6817 OEM firmware." >&2
+
+	echo " "
+	usage
+
 	exit 6
 fi
 
