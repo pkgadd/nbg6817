@@ -24,6 +24,10 @@ $(basename $0): parse and set the dual boot configuration on the ZyXEL NBG6817
 Parameters:
 -h|--help               this usage information
 --check-mtd-integrity   check the integrity of the dualflag mtd
+--fake-rootfs           change /proc/cmdline to display the alternative rootfs
+                        instead of the currently booted one, this will instruct
+                        sysupgrade to flash the currently booted partition set,
+                        instead of the alternative one.
 --get-mtd               get the dualflag mtd
                         /dev/mtdblock6 (ZyXEL OEM) or /dev/mtdblock11 (OpenWrt)
 --get-bootloader-rootfs get the rootfs chosen by the bootloader from sysfs
@@ -40,6 +44,8 @@ Parameters:
 --reset-rootfs <blkdev> DANGEROUS: rewrite the dualflag mtd completely and set
                         the desired rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
+--unfake-rootfs         restore the original /proc/cmdline, to allow writing
+                        to the alternative partition set again, if overridden
 
 EOF
 }
@@ -75,6 +81,41 @@ get_virtual_rootfs() {
 	else
 		echo "ERROR: failing to read ${1}." >&2
 		exit 14
+	fi
+}
+
+unfake_rootfs() {
+	# if previously overmounted, umount /proc/cmdline
+	while :; do umount /proc/cmdline 2>/dev/null || break ; done
+}
+
+fake_rootfs() {
+	local FAKE_CMDLINE_FILE
+	local FAKE_ROOTFS
+
+	unfake_rootfs
+
+	FAKE_CMDLINE_FILE="$(mktemp -t cmdline.XXXXXX || :)"
+	if [ ! -w "${FAKE_CMDLINE_FILE}" ]; then
+		echo "ERROR: failing to create ${FAKE_CMDLINE_FILE}." >&2
+		exit 15
+	fi
+
+	case "$(get_virtual_rootfs /sys/firmware/devicetree/base/chosen/bootloader-args)" in
+		/dev/mmcblk0p5)
+			FAKE_ROOTFS="mmcblk0p8"
+			;;
+		/dev/mmcblk0p8)
+			FAKE_ROOTFS="mmcblk0p5"
+			;;
+	esac
+
+	sed "s/root=[\/a-z0-9]*/root=\\/dev\\/${FAKE_ROOTFS}/" /proc/cmdline \
+		>"${FAKE_CMDLINE_FILE}"
+
+	if ! mount --bind "${FAKE_CMDLINE_FILE}" /proc/cmdline; then
+		echo "ERROR: failing to over-mount /proc/cmdline." >&2
+		exit 16
 	fi
 }
 
@@ -267,6 +308,10 @@ case "$1" in
 		echo $(check_mtd_integrity)
 		exit 0
 		;;
+	--fake-rootfs)
+		fake_rootfs
+		exit 0
+		;;
 	--get-mtd)
 		echo $(get_mtd)
 		exit 0
@@ -318,6 +363,10 @@ case "$1" in
 			usage
 			exit 9
 		fi
+		exit 0
+		;;
+	--unfake-rootfs)
+		unfake_rootfs
 		exit 0
 		;;
 	*)
