@@ -25,7 +25,7 @@ Parameters:
 -h|--help               this usage information
 --check-mtd-integrity   check the integrity of the dualflag mtd
 --get-mtd               get the dualflag mtd
-                        /dev/mtdblock6 (ZyXEL OEM) or /dev/mtdblock11 (LEDE)
+                        /dev/mtdblock6 (ZyXEL OEM) or /dev/mtdblock11 (OpenWrt)
 --get-bootloader-rootfs get the rootfs chosen by the bootloader from sysfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-rootfs            get the currently configured rootfs
@@ -45,7 +45,7 @@ EOF
 get_mtd() {
 	local DUAL_FLAG_MTD
 
-	# LEDE uses "0:DUAL_FLAG" (/dev/mtdblock11)
+	# LEDE/ OpenWrt uses "0:DUAL_FLAG" (/dev/mtdblock11)
 	DUAL_FLAG_MTD="$(find_mtd_part 0:DUAL_FLAG)"
 	if [ -z "${DUAL_FLAG_MTD}" ]; then
 		# the ZyXEL OEM firmware uses "dualflag" (/dev/mtdblock6)
@@ -226,12 +226,12 @@ check_mtd_integrity() {
 
 # ugly workaround, the OEM firmware doesn't define this function, while still
 # providing and populating /tmp/sysinfo/board_name correctly, let this be
-# redefined by /lib/functions.sh on LEDE
+# redefined by /lib/functions.sh on LEDE/ OpenWrt
 board_name() {
 	[ -e /tmp/sysinfo/board_name ] && cat /tmp/sysinfo/board_name || echo "generic"
 }
 
-# provide find_mtd_part(), available in both LEDE and the ZyXEL OEM firmware
+# provide find_mtd_part(), available in both LEDE/ OpenWrt and the ZyXEL OEM firmware
 if [ -r /lib/functions.sh ]; then
 	. /lib/functions.sh
 else
