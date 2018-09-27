@@ -146,8 +146,6 @@ get_version() {
 	local ROOTFS
 	local ALTBOOT
 	local BOOTFLAG
-	local ROOT_FROM_CMDLINE
-	local ROOT_FROM_BOOTLOADER
 	ROOTFS="$1"
 
 	case "$ROOTFS" in
@@ -204,6 +202,9 @@ EOF
 }
 
 check_for_fake_rootfs() {
+	local ROOT_FROM_CMDLINE
+	local ROOT_FROM_BOOTLOADER
+
 	ROOT_FROM_CMDLINE="$(get_virtual_rootfs /proc/cmdline)"
 	ROOT_FROM_BOOTLOADER="$(get_virtual_rootfs /sys/firmware/devicetree/base/chosen/bootloader-args)"
 	if [ "${ROOT_FROM_CMDLINE}" != "${ROOT_FROM_BOOTLOADER}" ]; then
