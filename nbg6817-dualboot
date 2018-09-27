@@ -27,14 +27,18 @@ Parameters:
 --toggle-rootfs         toggle the stored bootflag to boot from the alternative
                         partition set.
                         please reboot immediately after using this parameter!
+
+Advanced parameters:
+--get-rootfs            get the currently configured rootfs
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
+--set-rootfs <blkdev>   set the desired rootfs
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
 --fake-rootfs           change /proc/cmdline to display the alternative rootfs
                         instead of the currently booted one, this will instruct
                         sysupgrade to flash the currently booted partition set,
                         instead of the alternative one.
 --unfake-rootfs         restore the original /proc/cmdline, to allow writing
                         to the alternative partition set again, if overridden
-
-Advanced parameters:
 --check-mtd-integrity   check the integrity of the dualflag mtd
 --get-mtd               get the dualflag mtd
                         /dev/mtdblock6 (ZyXEL OEM) or /dev/mtdblock11 (OpenWrt)
@@ -42,14 +46,10 @@ Advanced parameters:
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-cmdline-rootfs    get the rootfs configured by /proc/cmdline
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
---get-rootfs            get the currently configured rootfs
-                        /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-version <blkdev>  try to decode the version of the firmware installed in
                         the named rootfs (/dev/mmcblk0p5 or /dev/mmcblk0p8)
 --reset-rootfs <blkdev> DANGEROUS: rewrite the dualflag mtd completely and set
                         the desired rootfs
-                        /dev/mmcblk0p5 or /dev/mmcblk0p8
---set-rootfs <blkdev>   set the desired rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 
 EOF
