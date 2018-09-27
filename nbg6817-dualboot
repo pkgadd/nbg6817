@@ -26,6 +26,8 @@ Parameters:
 --check-mtd-integrity   check the integrity of the dualflag mtd
 --get-mtd               get the dualflag mtd
                         /dev/mtdblock6 (ZyXEL OEM) or /dev/mtdblock11 (LEDE)
+--get-bootloader-rootfs get the rootfs chosen by the bootloader from sysfs
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-rootfs            get the currently configured rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-version <blkdev>  try to decode the version of the firmware installed in
@@ -56,6 +58,21 @@ get_mtd() {
 	else
 		echo "ERROR: failing to find DUAL_FLAG mtd" >&2
 		exit 1
+	fi
+}
+
+get_bootloader_rootfs() {
+	if [ -r /sys/firmware/devicetree/base/chosen/bootloader-args ]; then
+		for param in $(cat /sys/firmware/devicetree/base/chosen/bootloader-args); do
+			case "${param}" in
+				root=*)
+					echo "${param#root=}"
+					;;
+			esac
+		done
+	else
+		echo "ERROR: failing to read /sys/firmware/devicetree/base/chosen/bootloader-args." >&2
+		exit 14
 	fi
 }
 
@@ -250,6 +267,10 @@ case "$1" in
 		;;
 	--get-mtd)
 		echo $(get_mtd)
+		exit 0
+		;;
+	--get-bootloader-rootfs)
+		echo $(get_bootloader_rootfs)
 		exit 0
 		;;
 	--get-rootfs)
