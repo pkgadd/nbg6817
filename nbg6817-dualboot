@@ -141,6 +141,8 @@ get_version() {
 	local ROOTFS
 	local ALTBOOT
 	local BOOTFLAG
+	local ROOT_FROM_CMDLINE
+	local ROOT_FROM_BOOTLOADER
 	ROOTFS="$1"
 
 	case "$ROOTFS" in
@@ -194,6 +196,20 @@ KERNEL_VERSION="${KERNEL_VERSION}"
 UNAME_VERSION="${KERNEL_VERSION##*Linux-}"
 BOOTFLAG="${BOOTFLAG}"
 EOF
+
+	ROOT_FROM_CMDLINE="$(get_virtual_rootfs /proc/cmdline)"
+	ROOT_FROM_BOOTLOADER="$(get_virtual_rootfs /sys/firmware/devicetree/base/chosen/bootloader-args)"
+	if [ "${ROOT_FROM_CMDLINE}" != "${ROOT_FROM_BOOTLOADER}" ]; then
+	cat <<EOF
+
+WARNING: /proc/cmdline overriden, sysupgrade will flash the currently booted
+         partition set instead of the alternative one.
+         sysupgrade will overwrite: /dev/mmcblk0p$(( ${ROOT_FROM_CMDLINE#\/dev\/mmcblk0p} - 1)) and ${ROOT_FROM_CMDLINE}
+
+The original behaviour of sysupgrade writing to the alternative partition set
+can be restored via "$(basename $0) --unfake-rootfs".
+EOF
+	fi
 }
 
 set_rootfs() {
