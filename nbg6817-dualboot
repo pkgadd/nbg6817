@@ -100,7 +100,7 @@ fake_rootfs() {
 
 	unfake_rootfs
 
-	FAKE_CMDLINE_FILE="$(mktemp -t cmdline.XXXXXX || :)"
+	FAKE_CMDLINE_FILE="$(mktemp -qt cmdline.XXXXXX)"
 	if [ ! -w "${FAKE_CMDLINE_FILE}" ]; then
 		echo "ERROR: failing to create ${FAKE_CMDLINE_FILE}." >&2
 		exit 15
@@ -117,6 +117,7 @@ fake_rootfs() {
 
 	sed "s/root=[\/a-z0-9]*/root=\\/dev\\/${FAKE_ROOTFS}/" /proc/cmdline \
 		>"${FAKE_CMDLINE_FILE}"
+	chmod 0444 "${FAKE_CMDLINE_FILE}"
 
 	if ! mount --bind "${FAKE_CMDLINE_FILE}" /proc/cmdline; then
 		echo "ERROR: failing to over-mount /proc/cmdline." >&2
