@@ -201,18 +201,20 @@ KERNEL_VERSION="${KERNEL_VERSION}"
 UNAME_VERSION="${KERNEL_VERSION##*Linux-}"
 BOOTFLAG="${BOOTFLAG}"
 EOF
+}
 
+check_for_fake_rootfs() {
 	ROOT_FROM_CMDLINE="$(get_virtual_rootfs /proc/cmdline)"
 	ROOT_FROM_BOOTLOADER="$(get_virtual_rootfs /sys/firmware/devicetree/base/chosen/bootloader-args)"
 	if [ "${ROOT_FROM_CMDLINE}" != "${ROOT_FROM_BOOTLOADER}" ]; then
 	cat <<EOF
-
-WARNING: /proc/cmdline overriden, sysupgrade will flash the currently booted
-         partition set instead of the alternative one.
+WARNING: /proc/cmdline has been overriden, sysupgrade will flash the currently
+         booted partition set instead of the alternative one.
          sysupgrade will overwrite: /dev/mmcblk0p$(( ${ROOT_FROM_CMDLINE#\/dev\/mmcblk0p} - 1)) and ${ROOT_FROM_CMDLINE}
 
 The original behaviour of sysupgrade writing to the alternative partition set
 can be restored via "$(basename $0) --unfake-rootfs".
+
 EOF
 	fi
 }
@@ -389,6 +391,9 @@ case "$1" in
 		echo ""
 		echo ""
 		get_version /dev/mmcblk0p8
+		echo ""
+		echo ""
+		check_for_fake_rootfs
 		exit 0
 		;;
 	--set-rootfs)
