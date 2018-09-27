@@ -23,15 +23,14 @@ $(basename $0): parse and set the dual boot configuration on the ZyXEL NBG6817
 
 Parameters:
 -h|--help               this usage information
+-l|--list               list installed firmwares
+--toggle-rootfs         toggle the stored bootflag to boot from the alternative
+                        partition set.
+                        Please reboot immediately after using this parameter!
 --fake-rootfs           change /proc/cmdline to display the alternative rootfs
                         instead of the currently booted one, this will instruct
                         sysupgrade to flash the currently booted partition set,
                         instead of the alternative one.
---get-rootfs            get the currently configured rootfs
-                        /dev/mmcblk0p5 or /dev/mmcblk0p8
--l|--list               list installed firmwares
---set-rootfs <blkdev>   set the desired rootfs
-                        /dev/mmcblk0p5 or /dev/mmcblk0p8
 --unfake-rootfs         restore the original /proc/cmdline, to allow writing
                         to the alternative partition set again, if overridden
 
@@ -43,10 +42,14 @@ Advanced parameters:
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-cmdline-rootfs    get the rootfs configured by /proc/cmdline
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
+--get-rootfs            get the currently configured rootfs
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
 --get-version <blkdev>  try to decode the version of the firmware installed in
                         the named rootfs (/dev/mmcblk0p5 or /dev/mmcblk0p8)
 --reset-rootfs <blkdev> DANGEROUS: rewrite the dualflag mtd completely and set
                         the desired rootfs
+                        /dev/mmcblk0p5 or /dev/mmcblk0p8
+--set-rootfs <blkdev>   set the desired rootfs
                         /dev/mmcblk0p5 or /dev/mmcblk0p8
 
 EOF
@@ -237,6 +240,27 @@ set_rootfs() {
 	esac
 }
 
+toggle_rootfs() {
+	local ROOTFS
+
+	ROOTFS="$(get_rootfs)"
+	echo "Current rootfs: ${ROOTFS}"
+
+	case "$ROOTFS" in
+		/dev/mmcblk0p5)
+			ROOTFS="/dev/mmcblk0p8"
+			;;
+		/dev/mmcblk0p8)
+			ROOTFS="/dev/mmcblk0p5"
+			;;
+	esac
+
+	set_rootfs "${ROOTFS}"
+	echo "New rootfs: ${ROOTFS}"
+	echo ""
+	echo "Please reboot now."
+}
+
 reset_rootfs() {
 	local ROOTFS
 	ROOTFS="$1"
@@ -385,6 +409,10 @@ case "$1" in
 			usage
 			exit 9
 		fi
+		exit 0
+		;;
+	--toggle-rootfs)
+		toggle_rootfs
 		exit 0
 		;;
 	--unfake-rootfs)
