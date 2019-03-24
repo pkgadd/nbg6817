@@ -174,7 +174,7 @@ get_version() {
 	esac
 
 	FIRMWARE_VERSION="$(dd if=${HEADER} bs=1 skip=8 count=16 2>/dev/null)"
-	KERNEL_VERSION="$(dd if=${KERNEL} bs=1 skip=32 count=25 2>/dev/null)"
+	KERNEL_VERSION="$(dd if=${KERNEL} bs=1 skip=32 count=128 2>/dev/null | sed -n 's/.*\(^.*Linux-[0-9\\.]*\).*/\1/p')"
 
 	case "$KERNEL_VERSION" in
 		ARM*Linux-*)
