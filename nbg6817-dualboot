@@ -25,6 +25,7 @@ Parameters:
 -h|--help               this usage information
 -hh|--full-help         also display advanced usage informations
 -l|--list               list installed firmwares
+-sl|--short-list        abbreviated list installed firmwares
 --toggle-rootfs         toggle the stored bootflag to boot from the alternative
                         partition set.
                         please reboot immediately after using this parameter!
@@ -206,6 +207,47 @@ FIRMWARE_VERSION="${FIRMWARE_VERSION}"
 KERNEL_VERSION="${KERNEL_VERSION}"
 UNAME_VERSION="${KERNEL_VERSION##*Linux-}"
 BOOTFLAG="${BOOTFLAG}"
+EOF
+}
+
+get_short_list() {
+	local PRIMARY_FIRMWARE_VERSION
+	local PRIMARY_KERNEL_VERSION
+	local SECONDARY_FIRMWARE_VERSION
+	local SECONDARY_KERNEL_VERSION
+	local BOOT_PARTITION_SET
+
+	PRIMARY_FIRMWARE_VERSION="$(dd if=/dev/mmcblk0p3 bs=1 skip=8 count=16 2>/dev/null)"
+	PRIMARY_KERNEL_VERSION="$(dd if=/dev/mmcblk0p4 bs=1 skip=32 count=128 2>/dev/null | sed -n 's/.*\(^.*Linux-[0-9\\.]*\).*/\1/p')"
+	case "$PRIMARY_KERNEL_VERSION" in ARM*Linux-*) PRIMARY_FIRMWARE_VERSION="OpenWrt" ;; esac
+
+	SECONDARY_FIRMWARE_VERSION="$(dd if=/dev/mmcblk0p6 bs=1 skip=8 count=16 2>/dev/null)"
+	SECONDARY_KERNEL_VERSION="$(dd if=/dev/mmcblk0p7 bs=1 skip=32 count=128 2>/dev/null | sed -n 's/.*\(^.*Linux-[0-9\\.]*\).*/\1/p')"
+	case "$SECONDARY_KERNEL_VERSION" in ARM*Linux-*) SECONDARY_FIRMWARE_VERSION="OpenWrt" ;; esac
+
+	case "$(get_rootfs)" in
+		/dev/mmcblk0p5)
+			BOOT_PARTITION_SET="primary"
+			;;
+		/dev/mmcblk0p8)
+			BOOT_PARTITION_SET="secondary"
+			;;
+	esac
+
+	cat <<EOF
+$(basename $0): short listing of the installed firmware sets
+
+Primary partition set (/dev/mmcblk0p5):
+	firmware version: ${PRIMARY_FIRMWARE_VERSION}
+	kernel version:   ${PRIMARY_KERNEL_VERSION##*Linux-}
+
+Secondary partition set (/dev/mmcblk0p8):
+	firmware version: ${SECONDARY_FIRMWARE_VERSION}
+	kernel version:   ${SECONDARY_KERNEL_VERSION##*Linux-}
+
+Boot from:
+	${BOOT_PARTITION_SET}
+
 EOF
 }
 
@@ -407,6 +449,10 @@ case "$1" in
 		echo ""
 		echo ""
 		check_for_fake_rootfs
+		exit 0
+		;;
+	-sl|--short-list)
+		get_short_list
 		exit 0
 		;;
 	--set-rootfs)
