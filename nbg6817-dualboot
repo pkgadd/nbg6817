@@ -249,6 +249,8 @@ Boot from:
 	${BOOT_PARTITION_SET}
 
 EOF
+
+	check_for_fake_rootfs
 }
 
 check_for_fake_rootfs() {
