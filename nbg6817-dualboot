@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright: (C) 2017-2019, Stefan Lippers-Hollmann <s.l-h@gmx.de>
+# Copyright: (C) 2017-2021, Stefan Lippers-Hollmann <s.l-h@gmx.de>
 
 # License: ISC
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -66,11 +66,15 @@ EOF
 get_mtd() {
 	local DUAL_FLAG_MTD
 
-	# LEDE/ OpenWrt uses "0:DUAL_FLAG" (/dev/mtdblock11)
-	DUAL_FLAG_MTD="$(find_mtd_part 0:DUAL_FLAG)"
+	# OpenWrt with kernel >=5.10 uses "0:dual_flag" (/dev/mtdblock11)
+	DUAL_FLAG_MTD="$(find_mtd_part 0:dual_flag)"
 	if [ -z "${DUAL_FLAG_MTD}" ]; then
-		# the ZyXEL OEM firmware uses "dualflag" (/dev/mtdblock6)
-		DUAL_FLAG_MTD="$(find_mtd_part dualflag)"
+		# OpenWrt with kernel <5.10 uses "0:DUAL_FLAG" (/dev/mtdblock11)
+		DUAL_FLAG_MTD="$(find_mtd_part 0:DUAL_FLAG)"
+		if [ -z "${DUAL_FLAG_MTD}" ]; then
+			# ZyXEL's OEM firmware uses "dualflag" (/dev/mtdblock6)
+			DUAL_FLAG_MTD="$(find_mtd_part dualflag)"
+		fi
 	fi
 
 	# check that the detected mtd is really a block device
